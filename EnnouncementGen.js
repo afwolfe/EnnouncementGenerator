@@ -376,7 +376,7 @@ function sendRequestAuto() {
 
 function getByline() {
   html = '<br /> \
-<p style="color:#C0C0C0; font-size: xx-small">EnnouncementGen by Alex Wolfe v' + getVersion() +'<br /> \
+<p style="color:#C0C0C0; font-size: xx-small"><a href="https://github.com/afwolfe/EnnouncementGen">EnnouncementGen</a> by Alex Wolfe v' + getVersion() +'<br /> \
 Uses <a href="https://github.com/showdownjs/showdown">showdown.js</a> licensed under <a href="https://www.opensource.org/licenses/MIT">MIT License.</a></p>';
   return html;
 }
