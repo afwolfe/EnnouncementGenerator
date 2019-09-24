@@ -1,0 +1,38 @@
+//This file contains the customizable settings for the ennouncement generator.
+//Copy and rename to settings.js to use.
+function getCategories() {
+  //This affects the order of the categories as they will appear in the email. Categories that don't match this list won't make it to the final email.
+  var categories = ['Priority', 'Office', 'Events', 'Clubs', 'Other'];
+  return categories;
+}
+
+function getRecipients() {
+  //A comma separated list of all recipients
+  return "";
+}
+
+function getCC() {
+    //Any email(s) that should be (B)CC'd on the email.
+    //By default, this BCC's the current user so that they can see the email in their Inbox.
+    return Session.getEffectiveUser().getEmail();
+}
+
+function getSubject() {
+    //Subject line of the email.
+    var TODAY = new Date();
+    return "Ennouncements for the Week of " + (TODAY.getMonth() + 1) + "/" + TODAY.getDate() + "/" + TODAY.getYear();
+}
+
+function buildRequestHtml() {
+    //This is the request email in basic HTML formatting. Gets the Form URL from the Sheet. Make sure the from name is accurate.
+    var htmlBody =
+        "<p>Hello everyone,</p>\n \
+       <p>If you have any ennouncements for next week, please send them to the <a href='" + SpreadsheetApp.getActiveSpreadsheet().getFormUrl() + "'>BMSA Ennouncement Google Form</a>.</p>\n \
+       <strong>The Ennouncement form now supports basic formatting of your messages. See the form for more details.</strong> \
+       <p>Messages that are approved will be printed <strong>as-is</strong>, so please proofread them before sending. Please send your ennouncement by Friday at 3:15 PM.</p>\n \
+       <br/>\n \
+       <p>Thank you!</p>";
+
+    //htmlBody += getByline();
+    return htmlBody;
+}
