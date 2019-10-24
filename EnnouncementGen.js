@@ -1,7 +1,7 @@
 /*
   Name:     Ennouncement Generator
   Author:   Alex Wolfe
-  Version:  4.1
+  Version:  4.2
 
   License:  GPLv3 (https://www.gnu.org/licenses/gpl.html)
 
@@ -145,7 +145,7 @@ function buildEnnouncement(spreadsheet, testOnly) {
     //Process the row.
     var tempRow = processRow(announcementArray[i]);
     var tempEndDate = tempRow[5];
-    var isApproved = false;
+    var isApproved = !isApprovalRequired();
     if (tempRow[7] == "Y") { isApproved = true; }
     
     //Logger.log(tempRow);
@@ -316,19 +316,20 @@ Uses <a href="https://github.com/showdownjs/showdown">showdown.js</a> licensed u
 
 function areSubmissionsApproved() {
   //Checks if all submissions are approved.
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var ennouncements = ss.getSheetByName('Ennouncements');
-  var maxRows = ennouncements.getLastRow();
+  if (isApprovalRequired()) {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ennouncements = ss.getSheetByName('Ennouncements');
+    var maxRows = ennouncements.getLastRow();
 
-  var ennouncementArray = ennouncements.getRange(2, 1, maxRows - 1, 9).getValues();
+    var ennouncementArray = ennouncements.getRange(2, 1, maxRows - 1, 9).getValues();
 
-  for (i = 0; i < ennouncementArray.length; i++) {
-    if (ennouncementArray[i][7] == '') {
-      Logger.log('false');
-      return false;
+    for (i = 0; i < ennouncementArray.length; i++) {
+      if (ennouncementArray[i][7] == '') {
+        Logger.log('false');
+        return false;
+      }
     }
   }
-
   return true
 }
 

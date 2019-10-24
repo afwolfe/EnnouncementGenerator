@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.2
+
+* Added additional options to make approval and auto-locking the form optional.
+
 ## 4.1
 
 * Moved changelog to separate file.

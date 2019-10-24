@@ -2,6 +2,18 @@
 
 A Google Apps Script solution for building a weekly email announcement system.
 
+## Features
+
+* Creates a simple HTML email of submitted announcements.
+* Checks that announcements have been approved in the sheet and not already sent.
+* Support for recurring announcements (will send on endDate).
+* Uses showdown.js to convert Markdown to HTML.
+
+## Known Issues
+
+* Cancelling a "Send command" will still cause announcements to update their "Sent?" status. Make sure you use the undo button if this happens.
+
+
 ## Instructions
 
 This script is intended to be used with a Google Sheet.
