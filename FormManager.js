@@ -141,14 +141,18 @@ function renameResponseSheet() {
 }
 
 function lockForm() {
-  var form = FormApp.openById(getSavedFormId());
-  form.setCustomClosedFormMessage("The ennouncement form has been closed for this week. Please wait until next week to submit your ennouncement. \n Ennouncements are due by 3:15pm the week before.");
-  form.setAcceptingResponses(false);
+  if (isAutoLockFormEnabled()) {
+    var form = FormApp.openById(getSavedFormId());
+    form.setCustomClosedFormMessage("The ennouncement form has been closed for this week. Please wait until next week to submit your ennouncement. \n Ennouncements are due by 3:15pm the week before.");
+    form.setAcceptingResponses(false);
+  }
 }
 
 function unlockForm() {
-  var form = FormApp.openById(getSavedFormId());
-  form.setAcceptingResponses(true);
+  if (isAutoLockFormEnabled()) {
+    var form = FormApp.openById(getSavedFormId());
+    form.setAcceptingResponses(true);
+  }
 }
 
 function unlinkFormAndDeleteAll() {

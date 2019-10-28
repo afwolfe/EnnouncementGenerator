@@ -41,3 +41,8 @@ function isApprovalRequired() {
   // Return whether or not approval is required for messages.
   return true;
 }
+
+function isAutoLockFormEnabled() {
+  // Return whether or not the form should automatically be locked/unlocked each week.
+  return true;
+}
