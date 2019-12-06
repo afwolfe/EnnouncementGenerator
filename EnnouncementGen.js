@@ -41,7 +41,7 @@ function onOpen() {
     .addToUi();
 }
 
-function processRow(row) {
+function prepareRow(row) {
   /*
     [i][0] Datestamp (unused)
     [i][1] Author's email (unused)
@@ -64,7 +64,7 @@ function processRow(row) {
 
   row[3].replace(/(<([^>]+)>)/ig, ""); //clear HTML tags
   row[4].replace(/(<([^>]+)>)/ig, ""); // clear HTML tags
-  
+
   var showdown = getConverter();
   var html = showdown.makeHtml(row[4]);
   row[4] = html;
@@ -82,6 +82,62 @@ function processRow(row) {
   row[5].setMilliseconds(0);
 
   return row;
+}
+
+function processRow(row, i, testOnly) {
+  //Processes the given row, returning whether or not the row will be sent (for counting purposes).
+  var TODAY = new Date();
+  TODAY.setHours(0);
+  TODAY.setMinutes(0);
+  TODAY.setSeconds(0);
+  TODAY.setMilliseconds(0);
+
+  var categories = getCategories();
+
+  //Process the row.
+  var tempRow = prepareRow(row);
+  var tempEndDate = tempRow[5];
+  var isApproved = !isApprovalRequired();
+  if (tempRow[7] == "Y") { isApproved = true; }
+
+  //Logger.log(tempRow);
+
+  var isSent = false;
+  var isRecurring = false;
+  var toSend = false;
+
+  if (tempRow[8] == "Y") { isSent = true; }
+  else if (tempRow[8] == "R") { isRecurring = true; }
+  //Done processing row.
+
+  //Build the HTML for the row
+  if (isSent || !isApproved || TODAY.getTime() > tempEndDate.getTime()) {
+    //If already sent, or not approved, or past the tempEndDate then don't add to HTML.
+  }
+  else {
+    //announcementCount++;
+    var tempCategory = categories.indexOf(tempRow[2]);
+    categoryHtml[tempCategory] += buildRowHtml(tempRow);
+    toSend = true;
+  }
+
+  //TODO: Write sent value AFTER confirming send?
+  if (!testOnly) {
+    //Logger.log("Not in testing mode. Writing sent value.");
+    var statusCell = announcementSheet.getRange(2 + i, 9, 1);
+    if ((isApproved && isRecurring && (TODAY.getTime() >= tempEndDate.getTime())) || (!isRecurring && isApproved)) {
+      //End of recurring announcement, or sending a one-time event.
+      statusCell.setValue("Y");
+    }
+    else if (isApproved && isRecurring) {
+      //Unfinished recurring announcement
+      statusCell.setValue("R");
+    }
+    else {
+      //Do not send.
+      statusCell.setValue("N");
+    }
+  }
 }
 
 function buildRowHtml(row) {
@@ -127,74 +183,28 @@ function buildEnnouncement(spreadsheet, testOnly) {
     <p>Thank you students and staff for your submissions, here are your ennouncements for " + DAYS[TODAY.getDay()] + ", " + MONTHS[TODAY.getMonth()] + " " + dateOrdinal(TODAY.getDate()) + ", " + TODAY.getYear() + ".</p>\n \
     </br>\n";
 
-  for (i = 0; i < announcementArray.length; i++) {
-    //Logger.log(announcementArray[i]);
-    //For each row...
-    /*
-    [i][0] Datestamp (unused)
-    [i][1] Author's email (unused)
-    [i][2] Category
-    [i][3] Title
-    [i][4] Body Text
-    [i][5] End Date (optional)
-    [i][6] Contact Email (optional)
-    [i][7] Approved? (Y/N)
-    [i][8] Sent? (Y/N/R)
-    */
-
-    //Process the row.
-    var tempRow = processRow(announcementArray[i]);
-    var tempEndDate = tempRow[5];
-    var isApproved = !isApprovalRequired();
-    if (tempRow[7] == "Y") { isApproved = true; }
-    
-    //Logger.log(tempRow);
-    
-    var isSent = false;
-    var isRecurring = false;
-
-    if (tempRow[8] == "Y") { isSent = true; }
-    else if (tempRow[8] == "R") { isRecurring = true; }
-    //Done processing row.
-
-    //Build the HTML for the row
-    if (isSent || !isApproved || TODAY.getTime() > tempEndDate.getTime()) {
-      //If already sent, or not approved, or past the tempEndDate then don't add to HTML.
-      continue;
+  if (isSortOldToNew()) {
+    for (var i = 0; i < announcementArray.length; i++) {
+      var toSend = processRow(announcementArray[i], i, testOnly);
+      if (toSend)
+        announcementCount++;
     }
-    else {
-      announcementCount++;
-      var tempCategory = categories.indexOf(tempRow[2]);
-      categoryHtml[tempCategory] += buildRowHtml(tempRow);
-    }
-
-    //TODO: Write sent value AFTER confirming send?
-    if (!testOnly) {
-      //Logger.log("Not in testing mode. Writing sent value.");
-      var statusCell = announcementSheet.getRange(2 + i, 9, 1);
-      if ((isApproved && isRecurring && (TODAY.getTime() >= tempEndDate.getTime())) || (!isRecurring && isApproved)) {
-        //End of recurring announcement, or sending a one-time event.
-        statusCell.setValue("Y");
-      }
-      else if (isApproved && isRecurring) {
-        //Unfinished recurring announcement
-        statusCell.setValue("R");
-      }
-      else {
-        //Do not send.
-        statusCell.setValue("N");
-      }
-
-    }
-    /*
-    Logger.log("Title: "+announcementArray[i][2]);
-    Logger.log("Body: "+announcementArray[i][3]);
-    Logger.log("isApproved "+isApproved);
-    Logger.log("isSent "+isSent);
-    Logger.log("tempEndDate "+tempEndDate.getTime());
-    Logger.log("isRecurring "+isRecurring);
-    */
   }
+  else {
+    for (var i = announcementArray; i >= 0; i--) {
+      var e = processRow(announcementArray[i], i, testOnly);
+      if (toSend)
+        announcementCount++;
+    }
+  }
+  /*
+  Logger.log("Title: "+announcementArray[i][2]);
+  Logger.log("Body: "+announcementArray[i][3]);
+  Logger.log("isApproved "+isApproved);
+  Logger.log("isSent "+isSent);
+  Logger.log("tempEndDate "+tempEndDate.getTime());
+  Logger.log("isRecurring "+isRecurring);
+  */
 
   if (announcementCount == 0) { throw ("No ennouncements that need sent. Stopping."); }
 
@@ -250,7 +260,7 @@ function sendEnnouncementAuto() {
   else {
     var url = ss.getUrl();
     return MailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Ennouncement Problem", "Not all submissions on the sheet were approved, go to: " + url + "\n" +
-    "To approve/deny all pending announcements and then manually send using the Ennouncements->Send Only menu.");
+      "To approve/deny all pending announcements and then manually send using the Ennouncements->Send Only menu.");
   }
 }
 
@@ -297,7 +307,7 @@ function sendRequestAuto() {
   //Automatically send the request without prompting.
   var htmlBody = buildRequestHtml();
   var recipients = getRecipients();
-  
+
   return MailApp.sendEmail({
     to: recipients,
     bcc: getCC(),
@@ -308,7 +318,7 @@ function sendRequestAuto() {
 
 function getByline() {
   html = '<br /> \
-<p style="color:#C0C0C0; font-size: xx-small"><a href="https://github.com/afwolfe/EnnouncementGenerator">EnnouncementGen</a> by Alex Wolfe v' + getVersion() +'<br /> \
+<p style="color:#C0C0C0; font-size: xx-small"><a href="https://github.com/afwolfe/EnnouncementGenerator">EnnouncementGen</a> by Alex Wolfe v' + getVersion() + '<br /> \
 Uses <a href="https://github.com/showdownjs/showdown">showdown.js</a> licensed under <a href="https://www.opensource.org/licenses/MIT">MIT License.</a></p>';
   return html;
 }

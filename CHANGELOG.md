@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.3
+
+* Added a sorting option to post the newest announcements first.
+
 ## 4.2
 
 * Added additional options to make approval and auto-locking the form optional.
