@@ -265,7 +265,7 @@ function sendEnnouncementEmail(recipients, subject, htmlBody, doPrompt) {
     } else {
       throw ("User chose to not send ennouncement. Stopping.");
     }
-  }
+  }``
   return MailApp.sendEmail({
     to: recipients,
     bcc: getCC(),
@@ -281,7 +281,7 @@ function sendRequest() {
   if (response == ui.Button.YES) {
     var send = true;
   } else {
-    throw ("User chose to not send ennouncement. Stopping.");
+    throw ("User chose to not send ennouncement request. Stopping.");
   }
   var htmlBody = buildRequestHtml();
 
