@@ -16,7 +16,7 @@
 
 */
 var showdownConverter;
-
+var sendMessage;
 function getVersion() {
   return "4.1"
 }
@@ -98,8 +98,12 @@ function buildRowHtml(row) {
 function buildEnnouncement(spreadsheet, testOnly) {
   if (arguments.length == 1) {
     var testOnly = false;
+    sendMessage = true;
   } else {
     var testOnly = testOnly;
+    if (testOnly) {
+      sendMessage = false;
+    }
   }
   //Make a variable for today and set the time to 00:00h for ease of checking.
   var TODAY = new Date();
@@ -170,20 +174,21 @@ function buildEnnouncement(spreadsheet, testOnly) {
 
     //TODO: Write sent value AFTER confirming send?
     if (!testOnly) {
-      //Logger.log("Not in testing mode. Writing sent value.");
-      var statusCell = announcementSheet.getRange(2 + i, 9, 1);
-      if ((isApproved && isRecurring && (TODAY.getTime() >= tempEndDate.getTime())) || (!isRecurring && isApproved)) {
-        //End of recurring announcement, or sending a one-time event.
-        statusCell.setValue("Y");
-      }
-      else if (isApproved && isRecurring) {
-        //Unfinished recurring announcement
-        statusCell.setValue("R");
-      }
-      else {
-        //Do not send.
-        statusCell.setValue("N");
-      }
+      
+      // //Logger.log("Not in testing mode. Writing sent value.");
+      // var statusCell = announcementSheet.getRange(2 + i, 9, 1);
+      // if ((isApproved && isRecurring && (TODAY.getTime() >= tempEndDate.getTime())) || (!isRecurring && isApproved)) {
+      //   //End of recurring announcement, or sending a one-time event.
+      //   statusCell.setValue("Y");
+      // }
+      // else if (isApproved && isRecurring) {
+      //   //Unfinished recurring announcement
+      //   statusCell.setValue("R");
+      // }
+      // else {
+      //   //Do not send.
+      //   statusCell.setValue("N");
+      // }
 
     }
     /*
@@ -227,13 +232,15 @@ function sendToSelf() {
 }
 
 function sendEnnouncement() {
+  if (!sendMessage) {
+    return;
+  }
   //Sends the ennouncement.
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var RECIPIENTS = getRecipients();
   var SUBJECT = getSubject();
 
   var htmlBody = buildEnnouncement(ss);
-
   return sendEnnouncementEmail(RECIPIENTS, SUBJECT, htmlBody, true);
 }
 
@@ -262,10 +269,24 @@ function sendEnnouncementEmail(recipients, subject, htmlBody, doPrompt) {
     var response = ui.alert("Send Ennouncement", "Do you want to send the ennouncement to " + recipients + "?", ui.ButtonSet.YES_NO);
     if (response == ui.Button.YES) {
       var send = true;
+      //Logger.log("Not in testing mode. Writing sent value.");
+      var statusCell = announcementSheet.getRange(2 + i, 9, 1);
+      if ((isApproved && isRecurring && (TODAY.getTime() >= tempEndDate.getTime())) || (!isRecurring && isApproved)) {
+        //End of recurring announcement, or sending a one-time event.
+        statusCell.setValue("Y");
+      }
+      else if (isApproved && isRecurring) {
+        //Unfinished recurring announcement
+        statusCell.setValue("R");
+      }
+      else {
+        //Do not send.
+        statusCell.setValue("N");
+      }
     } else {
       throw ("User chose to not send ennouncement. Stopping.");
     }
-  }``
+  }
   return MailApp.sendEmail({
     to: recipients,
     bcc: getCC(),
@@ -281,7 +302,7 @@ function sendRequest() {
   if (response == ui.Button.YES) {
     var send = true;
   } else {
-    throw ("User chose to not send ennouncement request. Stopping.");
+    throw ("User chose to not send ennouncement. Stopping.");
   }
   var htmlBody = buildRequestHtml();
 
